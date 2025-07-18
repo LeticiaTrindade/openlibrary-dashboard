@@ -1,15 +1,13 @@
-// src/hooks/useBooks.jsx
 import { useState, useEffect } from 'react';
 import { searchBooks } from '../../services/openLibraryAPI';
 
-const useBooks = (query, page, limit) => {
+const useBooks = (query, page, limit, yearRange, language, sort) => {
   const [books, setBooks] = useState([]);
-  const [numFound, setNumFound] = useState(0);
-  const [loading, setLoading] = useState(false); // inicia como false
+  const [numFound, setNumFound] = useState(0); // Este deve ser o total retornado pela API
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // não busca se query for null
     if (query === null) {
       setBooks([]);
       setNumFound(0);
@@ -22,10 +20,23 @@ const useBooks = (query, page, limit) => {
       setLoading(true);
       setError(null);
       try {
-        const data = await searchBooks(query, page, limit);
-        setBooks(data.docs);
-        setNumFound(data.numFound);
+        const data = await searchBooks(query, page, limit, yearRange, language, sort); 
+    
+        let filteredDocs = data.docs;
+        if (yearRange && yearRange.length === 2) {
+          const [minYearFilter, maxYearFilter] = yearRange;
+          filteredDocs = data.docs.filter(book => {
+            const publishYear = book.first_publish_year;
+            return publishYear >= minYearFilter && publishYear <= maxYearFilter;
+          });
+        }
+
+        setBooks(filteredDocs);
+    
+        setNumFound(data.numFound); 
+
       } catch (err) {
+        console.error("Erro ao carregar livros no useBooks:", err);
         setError('Erro ao carregar livros.');
       } finally {
         setLoading(false);
@@ -33,10 +44,9 @@ const useBooks = (query, page, limit) => {
     };
 
     fetchBooks();
-  }, [query, page, limit]);
+  }, [query, page, limit, yearRange, language, sort]);
 
   return { books, numFound, loading, error };
 };
 
 export default useBooks;
-  
