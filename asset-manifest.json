@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/openlibrary-dashboard/static/css/main.5e2aba64.css",
+    "main.js": "/openlibrary-dashboard/static/js/main.fa237931.js",
+    "static/js/453.8a12773c.chunk.js": "/openlibrary-dashboard/static/js/453.8a12773c.chunk.js",
+    "static/media/logo.svg": "/openlibrary-dashboard/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
+    "index.html": "/openlibrary-dashboard/index.html",
+    "main.5e2aba64.css.map": "/openlibrary-dashboard/static/css/main.5e2aba64.css.map",
+    "main.fa237931.js.map": "/openlibrary-dashboard/static/js/main.fa237931.js.map",
+    "453.8a12773c.chunk.js.map": "/openlibrary-dashboard/static/js/453.8a12773c.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.5e2aba64.css",
+    "static/js/main.fa237931.js"
+  ]
+}
