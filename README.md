@@ -3,6 +3,10 @@
 Este projeto é um Dashboard de Livros desenvolvido com React e Material-UI, que consome a API pública da OpenLibrary.
 A aplicação permite ao usuário pesquisar, listar, filtrar e visualizar detalhes de livros de forma dinâmica e responsiva, com recursos de paginação, filtros avançados e visualização gráfica.
 
+## Deploy Online
+✅ Acesse a aplicação online:
+[https://leticiatrindade.github.io/openlibrary-dashboard](https://leticiatrindade.github.io/openlibrary-dashboard)
+
 ## Funcionalidades principais:
 
   * Listagem de livros em cards responsivos com título, autores, ano de publicação e capa (ou placeholder).
