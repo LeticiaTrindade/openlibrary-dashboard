@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Container, Grid, Typography } from '@mui/material';
-import BookCard from '../components/BookCard/index.js';
-import Loading from '../components/Loading/index.js';
-import useBooks from '../hooks/useBooks/index.js';
-import BookModal from '../components/BookModal/index.js';
-import SearchBar from '../components/SearchBar/index.js';
-import Pagination from '../components/Pagination/index.js';
-import useDebounce from '../hooks/useDebounce/index.js';
-import AdvancedFilters from '../components/AdvancedFilters/index.js';
-import { sortBooks } from '../utils/helpers.js';
+import { Container, Grid, Typography, Box } from '@mui/material';
+import BookCard from '../components/BookCard';
+import Loading from '../components/Loading';
+import useBooks from '../hooks/useBooks';
+import BookModal from '../components/BookModal';
+import SearchBar from '../components/SearchBar';
+import Pagination from '../components/Pagination';
+import useDebounce from '../hooks/useDebounce';
+import AdvancedFilters from '../components/AdvancedFilters';
+import BookCharts from '../components/BookCharts';
+import { sortBooks } from '../utils/helpers';
 
 const Dashboard = () => {
   const [input, setInput] = useState('');
@@ -17,10 +18,10 @@ const Dashboard = () => {
   const limit = 12;
   const [selectedBook, setSelectedBook] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const initialMinYear = useMemo(() => 1800, []); 
-  const initialMaxYear = useMemo(() => new Date().getFullYear(), []); 
+  const initialMinYear = useMemo(() => 1800, []);
+  const initialMaxYear = useMemo(() => new Date().getFullYear(), []);
   const [minYear, setMinYear] = useState(initialMinYear);
-  const [maxYear, setMaxYear] = useState(initialMaxYear); 
+  const [maxYear, setMaxYear] = useState(initialMaxYear);
   const [yearRange, setYearRange] = useState([initialMinYear, initialMaxYear]);
   const [language, setLanguage] = useState('');
   const [sort, setSort] = useState('');
@@ -28,12 +29,43 @@ const Dashboard = () => {
   const query = debouncedQuery === '' ? null : debouncedQuery;
 
   useEffect(() => {
+    const fetchYears = async () => {
+      if (!query) {
+        setMinYear(initialMinYear);
+        setMaxYear(initialMaxYear);
+        setYearRange([initialMinYear, initialMaxYear]);
+        return;
+      }
+
+      try {
+        const response = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=50`);
+        const data = await response.json();
+        const years = data.docs
+          .map(book => book.first_publish_year)
+          .filter(year => year != null);
+        if (years.length > 0) {
+          const currentMinYear = Math.min(...years);
+          const currentMaxYear = Math.max(...years);
+          setMinYear(currentMinYear);
+          setMaxYear(currentMaxYear);
+          setYearRange([currentMinYear, currentMaxYear]);
+        } else {
+          setMinYear(initialMinYear);
+          setMaxYear(initialMaxYear);
+          setYearRange([initialMinYear, initialMaxYear]);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar anos:', error);
+        setMinYear(initialMinYear);
+        setMaxYear(initialMaxYear);
+        setYearRange([initialMinYear, initialMaxYear]);
+      }
+    };
+
     setPage(1);
     setManualYearRange(false);
-    setYearRange([initialMinYear, initialMaxYear]);
-    setMinYear(initialMinYear);
-    setMaxYear(initialMaxYear);
-  }, [query, language, sort, initialMinYear, initialMaxYear]);
+    fetchYears();
+  }, [query]);
 
   const { books, loading, error, numFound } = useBooks(
     query,
@@ -57,39 +89,6 @@ const Dashboard = () => {
   };
 
   const lastPage = Math.ceil(numFound / limit) || 1;
-  useEffect(() => { 
-    if (manualYearRange) {
-      return; 
-    }
-
-    if (books && books.length > 0) {
-      const years = books
-        .map(book => book.first_publish_year)
-        .filter(year => year != null);
-
-      if (years.length > 0) {
-        const currentMinYearOfResults = Math.min(...years);
-        const currentMaxYearOfResults = Math.max(...years);
-
-        setMinYear(currentMinYearOfResults);
-        setMaxYear(currentMaxYearOfResults);
-
-        const [currentSelectedMin, currentSelectedMax] = yearRange;
-        if (currentSelectedMin < currentMinYearOfResults || currentSelectedMax > currentMaxYearOfResults) {
-             setYearRange([currentMinYearOfResults, currentMaxYearOfResults]);
-        }
-        
-      } else {
-        setMinYear(initialMinYear);
-        setMaxYear(initialMaxYear);
-        setYearRange([initialMinYear, initialMaxYear]);
-      }
-    } else if (query === null) {
-        setMinYear(initialMinYear);
-        setMaxYear(initialMaxYear);
-        setYearRange([initialMinYear, initialMaxYear]);
-    }
-  }, [books, query, manualYearRange, initialMinYear, initialMaxYear, yearRange]); // Adicionado yearRange aqui também
 
   return (
     <Container sx={{ mt: 4, minHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
@@ -106,9 +105,9 @@ const Dashboard = () => {
         setLanguage={setLanguage}
         sort={sort}
         setSort={setSort}
-        minYear={minYear} 
-        maxYear={maxYear} 
-        setManualYearRange={setManualYearRange} 
+        minYear={minYear}
+        maxYear={maxYear}
+        setManualYearRange={setManualYearRange}
       />
 
       {query === null && (
@@ -128,7 +127,7 @@ const Dashboard = () => {
       )}
 
       <Grid container spacing={2} justifyContent="center" alignItems="stretch" sx={{ flexGrow: 1 }}>
-        {sortedBooks.map((book) => (
+        {sortedBooks.slice(0,5).map((book) => (
           <Grid
             item
             key={book.key}
@@ -151,6 +150,15 @@ const Dashboard = () => {
         lastPage={lastPage}
         numFound={numFound}
       />
+
+      {books.length > 0 && (
+        <Box sx={{ my: 4, width: '100%', bgcolor: 'background.paper', p: 2, borderRadius: 2, boxShadow: 3 }}>
+          <Typography variant="h5" gutterBottom>
+            Visualização de Dados dos Livros Encontrados
+          </Typography>
+          <BookCharts books={books} />
+        </Box>
+      )}
 
       <BookModal open={modalOpen} onClose={handleModalClose} book={selectedBook} />
     </Container>
